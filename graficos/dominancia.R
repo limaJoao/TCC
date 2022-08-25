@@ -28,4 +28,4 @@ ggplot(df, aes(f1,f2))+
   theme(axis.text = element_blank(),
         axis.ticks = element_blank())
 
-ggsave("/home/limaJV/Documentos/UFJF/TCC/imagens/dominancia.png")
+ggsave("./graficos/dominancia.png")
