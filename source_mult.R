@@ -1,3 +1,11 @@
+# Func transform binário to inteiro ====
+
+bin2int <- function(vet_bin){
+  int <- sum(vet_bin * 2^( (length(vet_bin)-1) : 0))
+  
+  return(int)
+}
+
 # Func Multiobj Falso Alarme (mL) ====
 
 FMO_FA.mL = function(vet)
@@ -11,8 +19,8 @@ FMO_FA.mL = function(vet)
   pi = 0.0001       # Probabilidade de ocorrencia de shift
   alpha = 0.01      # Probabilidade de classificacao nao cfe em item cfe
   beta = 0.01       # Probabilidade de classificacao cfe em item nao cfe
-  m = vet[1]
-  L = vet[2]
+  m = bin2int(vet[1:10])
+  L = bin2int(vet[11:21])
 
   # Parametros de custo
   

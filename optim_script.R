@@ -4,17 +4,16 @@
 #Carregando pacotes e as funções utilizadas
 
 source("source_mult.R")
-library(mco)
-library(nsga2R)
+library(rmoo)
 
 # ---- 1. MOGA ----
-
-my_constr <- function(x) { x[2] - x[1] }
-
-a <- nsga2(fn = FMO_FA.mL, idim = 2, odim = 2, 
-           lower.bounds = c(2,2), upper.bounds = c(2000, 4000),
-           constraints = my_constr, cdim = 1)
-
-nsga2R()
-
+debug(nsga2)
+result <- nsga2(type = 'binary',
+                fitness = FMO_FA.mL,
+                nBits = 21,
+                popSize = 100,
+                nObj = 2,
+                maxiter = 400,
+                monitor = FALSE)
+undebug(nsga2)
 
