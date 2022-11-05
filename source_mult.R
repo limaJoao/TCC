@@ -19,8 +19,8 @@ FMO_FA.mL = function(vet)
   pi = 0.0001       # Probabilidade de ocorrencia de shift
   alpha = 0.01      # Probabilidade de classificacao nao cfe em item cfe
   beta = 0.01       # Probabilidade de classificacao cfe em item nao cfe
-  m = bin2int(vet[1:10])
-  L = bin2int(vet[11:21])
+  m = vet[1]
+  L = vet[2]
 
   # Parametros de custo
   
@@ -33,47 +33,47 @@ FMO_FA.mL = function(vet)
   
   P = matrix(rep(0,36), nrow = 6)
   
-  P[1,1]=(1-pi)^m*(p1*(1-alpha)+(1-p1)*beta)
-  P[1,2]=(1-pi)^m*(p1*alpha+(1-p1)*(1-beta))
-  P[1,3]=(1-(1-pi)^m)*(p2*(1-alpha)+(1-p2)*beta)
-  P[1,4]=(1-(1-pi)^m)*(p2*alpha+(1-p2)*(1-beta))
-  P[1,5]=0
-  P[1,6]=0
+  P[1,1]=(1-pi)^m*(p1*(1-alpha)+(1-p1)*beta) #(0,1)(0,1)
+  P[1,2]=(1-pi)^m*(p1*alpha+(1-p1)*(1-beta)) #(0,1)(0,0)
+  P[1,3]=(1-(1-pi)^m)*(p2*(1-alpha)+(1-p2)*beta) #(0,1)(1,1)
+  P[1,4]=(1-(1-pi)^m)*(p2*alpha+(1-p2)*(1-beta)) #(0,1)(1,0)
+  P[1,5]=0 #(0,1)(2,1)
+  P[1,6]=0 #(0,1)(2,0)
   
-  P[2,1]=(1-pi)^L*(p1*(1-alpha)+(1-p1)*beta)
-  P[2,2]=(1-pi)^L*(p1*alpha+(1-p1)*(1-beta))
-  P[2,3]=(1-(1-pi)^L)*(p2*(1-alpha)+(1-p2)*beta)
-  P[2,4]=(1-(1-pi)^L)*(p2*alpha+(1-p2)*(1-beta))
-  P[2,5]=0
-  P[2,6]=0
+  P[2,1]=(1-pi)^L*(p1*(1-alpha)+(1-p1)*beta) #(0,0)(0,1)
+  P[2,2]=(1-pi)^L*(p1*alpha+(1-p1)*(1-beta)) #(0,0)(0,0)
+  P[2,3]=(1-(1-pi)^L)*(p2*(1-alpha)+(1-p2)*beta) #(0,0)(1,1)
+  P[2,4]=(1-(1-pi)^L)*(p2*alpha+(1-p2)*(1-beta)) #(0,0)(1,0)
+  P[2,5]=0 #(0,0)(2,1)
+  P[2,6]=0 #(0,0)(2,0)
   
-  P[3,1]=0
-  P[3,2]=0
-  P[3,3]=0
-  P[3,4]=0
-  P[3,5]=(p2*(1-alpha)+(1-p2)*beta)
-  P[3,6]=(p2*alpha+(1-p2)*(1-beta))
+  P[3,1]=0#(1,1)(0,1) 
+  P[3,2]=0#(1,1)(0,0) 
+  P[3,3]=0#(1,1)(1,1) 
+  P[3,4]=0#(1,1)(1,0) 
+  P[3,5]=(p2*(1-alpha)+(1-p2)*beta) #(1,1)(2,1)
+  P[3,6]=(p2*alpha+(1-p2)*(1-beta)) #(1,1)(2,0)
   
-  P[4,1]=(1-pi)^L*(p1*(1-alpha)+(1-p1)*beta)
-  P[4,2]=(1-pi)^L*(p1*alpha+(1-p1)*(1-beta))
-  P[4,3]=(1-(1-pi)^L)*(p2*(1-alpha)+(1-p2)*beta)
-  P[4,4]=(1-(1-pi)^L)*(p2*alpha+(1-p2)*(1-beta))
-  P[4,5]=0
-  P[4,6]=0
+  P[4,1]=(1-pi)^L*(p1*(1-alpha)+(1-p1)*beta) #(1,0)(0,1)
+  P[4,2]=(1-pi)^L*(p1*alpha+(1-p1)*(1-beta)) #(1,0)(0,0)
+  P[4,3]=(1-(1-pi)^L)*(p2*(1-alpha)+(1-p2)*beta) #(1,0)(1,1)
+  P[4,4]=(1-(1-pi)^L)*(p2*alpha+(1-p2)*(1-beta)) #(1,0)(1,0)
+  P[4,5]=0#(1,0)(2,1) 
+  P[4,6]=0#(1,0)(2,0) 
   
-  P[5,1]=0
-  P[5,2]=0
-  P[5,3]=0
-  P[5,4]=0
-  P[5,5]=(p2*(1-alpha)+(1-p2)*beta)
-  P[5,6]=(p2*alpha+(1-p2)*(1-beta))
+  P[5,1]=0 #(2,1)(0,1) 
+  P[5,2]=0 #(2,1)(0,0) 
+  P[5,3]=0 #(2,1)(1,1) 
+  P[5,4]=0 #(2,1)(1,0) 
+  P[5,5]=(p2*(1-alpha)+(1-p2)*beta)  #(2,1)(2,1)
+  P[5,6]=(p2*alpha+(1-p2)*(1-beta))  #(2,1)(2,0)
   
-  P[6,1]=(1-pi)^L*(p1*(1-alpha)+(1-p1)*beta)
-  P[6,2]=(1-pi)^L*(p1*alpha+(1-p1)*(1-beta))
-  P[6,3]=(1-(1-pi)^L)*(p2*(1-alpha)+(1-p2)*beta)
-  P[6,4]=(1-(1-pi)^L)*(p2*alpha+(1-p2)*(1-beta))
-  P[6,5]=0
-  P[6,6]=0
+  P[6,1]=(1-pi)^L*(p1*(1-alpha)+(1-p1)*beta)  #(2,0)(0,1)
+  P[6,2]=(1-pi)^L*(p1*alpha+(1-p1)*(1-beta))  #(2,0)(0,0)
+  P[6,3]=(1-(1-pi)^L)*(p2*(1-alpha)+(1-p2)*beta)  #(2,0)(1,1)
+  P[6,4]=(1-(1-pi)^L)*(p2*alpha+(1-p2)*(1-beta))  #(2,0)(1,0)
+  P[6,5]=0 #(2,0)(2,1) 
+  P[6,6]=0 #(2,0)(2,0) 
   
   A = t(P) - diag(6)
   A[6,] = rep(1,6)
@@ -189,7 +189,7 @@ FMO_FA.mL = function(vet)
   #Cálculo do custo Médio por Unidade Produzida e Enviada ao "Mercado"  
   CM=CP/TM
   
-  FA = y[2]/sum(y[1:2])
+  FA = y[2]/sum(y[1], y[2])
   
   return(c(CM, FA)) 
 }
