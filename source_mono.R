@@ -1,11 +1,27 @@
+#### Func bin to int ####
+
+bin2int <- function(vet_bin){
+  int <- sum(vet_bin * 2^( (length(vet_bin)-1) : 0))
+  
+  return(int)
+}
+
 #### func.mL ####
 
-func.mL = function(m,L)
+func.mL = function(m,L, 
+                   obj_cm = TRUE, # objetivo custo medio
+                   obj_mips = FALSE) # objetivo mips
 {
+  # Erro de entrada
+  if (!obj_cm){
+    if (!obj_mips){
+      stop("Tem de escolher pelo menos um objetivo!")
+    }
+  }
+  
   # Entrada dos Parametros
   
   # Parametros Probabilísticos do Processo
-  
   p1 = 0.999        # Fracao de conformes processo sobre controle
   p2 = 0.95         # Fracao de Conformes processo fora de controle
   pi = 0.0001       # Probabilidade de ocorrencia de shift
@@ -103,7 +119,6 @@ func.mL = function(m,L)
   z6=(y[2]*P[2,3]+y[4]*P[4,3]+y[6]*P[6,3])/
     (y[1]*P[1,3]+y[2]*P[2,3]+y[3]*P[3,3]+y[4]*P[4,3]+y[5]*P[5,3]+y[6]*P[6,3])
   
-  
   #Probabilidade de estar em s1k0 e ciclo ter comprimento m
   z7=(y[1]*P[1,4]+y[3]*P[3,4]+y[5]*P[5,4])/
     (y[1]*P[1,4]+y[2]*P[2,4]+y[3]*P[3,4]+y[4]*P[4,4]+y[5]*P[5,4]+y[6]*P[6,4])
@@ -112,7 +127,6 @@ func.mL = function(m,L)
   z8=(y[2]*P[2,4]+y[4]*P[4,4]+y[6]*P[6,4])/
     (y[1]*P[1,4]+y[2]*P[2,4]+y[3]*P[3,4]+y[4]*P[4,4]+y[5]*P[5,4]+y[6]*P[6,4])
   
-  
   #Probabilidade de estar em s2k1 e ciclo ter comprimento m
   z9=(y[1]*P[1,5]+y[3]*P[3,5]+y[5]*P[5,5])/
     (y[1]*P[1,5]+y[2]*P[2,5]+y[3]*P[3,5]+y[4]*P[4,5]+y[5]*P[5,5]+y[6]*P[6,5])
@@ -120,7 +134,6 @@ func.mL = function(m,L)
   #Probabilidade de estar em s2k1 e ciclo ter comprimento L
   z10=(y[2]*P[2,5]+y[4]*P[4,5]+y[6]*P[6,5])/
     (y[1]*P[1,5]+y[2]*P[2,5]+y[3]*P[3,5]+y[4]*P[4,5]+y[5]*P[5,5]+y[6]*P[6,5])
-  
   
   #Probabilidade de estar em s2k0 e ciclo ter comprimento m
   z11=(y[1]*P[1,6]+y[3]*P[3,6]+y[5]*P[5,6])/
@@ -137,23 +150,20 @@ func.mL = function(m,L)
   
   custo[2]=z3*(c_nc*(m-1)*(1-p1)+c_i+c_a+c_s)+z4*(c_nc*(L-1)*(1-p1)+c_i+c_a+c_s)#s0k0
   
-  s1=0
+  # Calculo s1 e s2
+  ## s1
+  i <- 1:m
   
-  for(i in 1:m)
-  {
-    k=(pi*(1-pi)^(i-1))/(1-(1-pi)^m)
-    k=k*((i-1)*(1-p1)+(m-i)*(1-p2))
-    s1=s1+k
-  }
+  k <- (pi*(1-pi)^(i-1))/(1-(1-pi)^m)
+  k <- k*((i-1)*(1-p1)+(m-i)*(1-p2))
+  s1 <- sum(k)
   
-  s2 = 0
+  # s2
+  i <- 1:L
   
-  for(i in 1:L)
-  {
-    k=(pi*(1-pi)^(i-1))/(1-(1-pi)^L)
-    k=k*((i-1)*(1-p1)+(L-i)*(1-p2))
-    s2=s2+k
-  }
+  k <- (pi*(1-pi)^(i-1))/(1-(1-pi)^L)
+  k <- k*((i-1)*(1-p1)+(L-i)*(1-p2))
+  s2 <- sum(k)
   
   custo[3]=z5*(s1*c_nc+c_i+c_s)+z6*(s2*c_nc+c_i+c_s) #s1k1
   custo[4]=z7*(s1*c_nc+c_i+c_s+c_a)+z8*(s2*c_nc+c_i+c_s+c_a) #s1k0
@@ -163,27 +173,50 @@ func.mL = function(m,L)
   #Fim do Cálculo dos Custos
   
   #Cálculo do Comprimento
-  T = rep(NA, 6)
+  T_v = rep(NA, 6)
   
-  T[1] = z1*(m-1)+z2*(L-1)
-  T[2] = z3*(m-1)+z4*(L-1)
-  T[3] = z5*(m-1)+z6*(L-1)
-  T[4] = z7*(m-1)+z8*(L-1)
-  T[5] = z9*(m-1)+z10*(L-1)
-  T[6] = z11*(m-1)+z12*(L-1)
+  T_v[1] = z1*(m-1)+z2*(L-1)
+  T_v[2] = z3*(m-1)+z4*(L-1)
+  T_v[3] = z5*(m-1)+z6*(L-1)
+  T_v[4] = z7*(m-1)+z8*(L-1)
+  T_v[5] = z9*(m-1)+z10*(L-1)
+  T_v[6] = z11*(m-1)+z12*(L-1)
   
   #Fim do cálculo do Comprimento
   
   #Cálculo do Custo Médio Total
-  CP=y[1]*custo[1]+y[2]*custo[2]+y[3]*custo[3]+y[4]*custo[4]+y[5]*custo[5]+y[6]*custo[6]
+  CP <- sum( y * custo )
   
   #Cálculo do Comprimento Médio Total
-  TM=y[1]*T[1]+y[2]*T[2]+y[3]*T[3]+y[4]*T[4]+y[5]*T[5]+y[6]*T[6]
+  TM <- sum( y * T_v)
   
   #Cálculo do custo Médio por Unidade Produzida e Enviada ao "Mercado"  
   CM=CP/TM
   
-  return(CM) 
+  # CALCULO DO MIPS
+  tm <- 1:m
+  tL <- 1:L
+  
+  zz10 <- z7 * sum( ( (1-pi)^(tm-1) * pi ) / ( 1-(1-pi)^m ) * (tm-1) / (m-1) ) +
+    z8 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
+  
+  zz11 <- z5 * sum( ( (1-pi)^(tL-1) * pi ) / ( 1-(1-pi)^L ) * (tL-1) / (L-1) ) +
+    z6 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
+  
+  # proporcao de tempo do sistema em nao-conformidade
+  p_nc <- y[3]*zz11 + y[4]*zz10 + y[5] + y[6]
+  
+  # Calculo MIPS
+  MIPS <- 1/p_nc
+  
+  # retorno dos valores
+  if (obj_mips){ #MIPS verdadeiro
+    if (obj_cm){return(c(CM, MIPS))} #MIPS e custo verdadeiros
+    
+    return(MIPS) # somente MIPS
+  }
+  
+  return(CM) # somente custo
 }
 
 #### func.m ####
