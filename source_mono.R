@@ -811,7 +811,7 @@ func.mLna = function(x)
   # Parametros do probabilisticos do processo
   
   p1 = 0.999       # Fracao de conformes processo sob controle
-  p2 = 0.5 #0.95        # Fracao de conformes processo fora controle
+  p2 = 0.95        # Fracao de conformes processo fora controle
   pe = 0.0001      # Probabilidade ocorrencia shift processo
   alfa = 0.01      # Probabilidade classificacao nao cfe item cfe
   beta = alfa      # Probabilidade classificacao cfe item nao-cfe
