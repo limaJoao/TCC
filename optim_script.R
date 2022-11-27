@@ -3,21 +3,54 @@
 # ---- 0. Preambulo ----
 #Carregando pacotes e as funções utilizadas
 
-source("source_mult.R")
+source("source_mono.R")
 library(rmoo)
 
-# ---- 1. MOGA ----
+# --------------------------- 1. MOGA ------------------------------
 
-result <- nsga2(type = 'real-valued', 
-                fitness = FMO_FA.mL, 
-                lower = c(0,0), upper = c(1,1),
-                popSize = 100,
-                nObj = 2,
-                names = c("m", "L"))
+result <- nsga2(
+  type = 'binary',
+  fitness = function(x) {
+    do.call('func.mL',
+            list(
+              vet = x,
+              obj_cm = TRUE,
+              obj_phi = TRUE
+            ))
+  },
+  popSize = 100,
+  nBits = 21,
+  nObj = 2, 
+  pmutation = 0.2,
+  seed =1101
+)
 
-apply(result@population, 1, function(x){
-  m = floor((2000 - 2)*x[1] + 2)
-  L = floor((2000 - m)*x[2] + m)
+(result@iter)
+
+# ----------------------- 2. RESULTADOS ----------------------------
+
+mat_res <- cbind(apply(result@population, 1, bin2int) %>% t(), 
+                 result@fitness) %>% 
+  as.data.frame() %>% 
+  rename(
+    "m" = "V1",
+    "L" = "V2",
+    "CM" = "V3",
+    "Phi" = "V4"
+  ) %>%
+  mutate(Phi=-Phi) %>% 
+  arrange(CM)
+
+head(mat_res)
+
+mat_res %>%
+  ggplot(., aes(CM, Phi))+
+  geom_point()
   
-  return(c(m,L))
-}) %>% t()
+
+
+
+
+
+
+

@@ -1,14 +1,19 @@
 #### Func bin to int ####
 
-bin2int <- function(vet_bin){
-  int <- sum(vet_bin * 2^( (length(vet_bin)-1) : 0))
+bin2int <- function(vet_bin, tams = c(10,11)){
+  # Separating the binaries
+  bin1 <- vet_bin[ 1:tams[1] ]
+  bin2 <- vet_bin[ (tams[1]+1) : length(vet_bin) ]
   
-  return(int)
+  int1 <- sum(bin1 * 2^( (length(bin1)-1) : 0))
+  int2 <- sum(bin2 * 2^( (length(bin2)-1) : 0))
+  
+  return(c(int1, int2))
 }
 
 #### func.mL ####
 
-func.mL = function(m,L, 
+func.mL = function(vet, 
                    obj_cm = TRUE, # objetivo custo medio
                    obj_phi = FALSE) # objetivo mips
 {
@@ -27,9 +32,11 @@ func.mL = function(m,L,
   pi = 0.0001       # Probabilidade de ocorrencia de shift
   alpha = 0.01      # Probabilidade de classificacao nao cfe em item cfe
   beta = 0.01       # Probabilidade de classificacao cfe em item nao cfe
-  #m = 41
-  #L = 896
   
+  # Decodificando Parametros de entrada
+  vet_int <- bin2int(vet_bin = vet)
+  m = vet_int[1]
+  L = vet_int[2]
   
   # Parametros de custo
   
@@ -207,11 +214,17 @@ func.mL = function(m,L,
   Phi <- ( y[2] + y[1] + zz10*y[4] + zz11*y[3] ) * p1 +
     ( (1-zz10)*y[4] + (1-zz11)*y[3] + y[6] + y[5]) * p2
   
+  # Corrigindo erro de Nan
+  if (anyNA(c(CM, Phi))){
+    CM <- Inf
+    Phi <- -Inf
+  }
+  
   # retorno dos valores
   if (obj_phi){ #Phi verdadeiro
-    if (obj_cm){return(c(CM, Phi))} #Phi e custo verdadeiros
+    if (obj_cm){return(c(CM, -Phi))} #Phi e custo verdadeiros
     
-    return(Phi) # somente Phi
+    return(-Phi) # somente Phi
   }
   
   return(CM) # somente custo
