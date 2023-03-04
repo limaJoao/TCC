@@ -1,21 +1,9 @@
-#### Func bin to int ####
-
-bin2int <- function(vet_bin, tams = c(10,11)){
-  # Separating the binaries
-  bin1 <- vet_bin[ 1:tams[1] ]
-  bin2 <- vet_bin[ (tams[1]+1) : length(vet_bin) ]
-  
-  int1 <- sum(bin1 * 2^( (length(bin1)-1) : 0))
-  int2 <- sum(bin2 * 2^( (length(bin2)-1) : 0))
-  
-  return(c(int1, int2))
-}
-
 #### func.mL ####
 
 func.mL = function(vet, 
                    obj_cm = TRUE, # objetivo custo medio
-                   obj_phi = FALSE) # objetivo mips
+                   obj_phi = FALSE, # objetivo mips
+                   func_m = FALSE) # Utilizar somente função m
 {
   # Erro de entrada
   if (!obj_cm){
@@ -34,9 +22,17 @@ func.mL = function(vet,
   beta = 0.01       # Probabilidade de classificacao cfe em item nao cfe
   
   # Decodificando Parametros de entrada
-  vet_int <- bin2int(vet_bin = vet)
-  m = vet_int[1]
-  L = vet_int[2]
+  
+  if (func_m){
+    
+    m = L = GA::binary2decimal(vet)
+    
+  }else{
+    
+    m = GA::binary2decimal( vet[1:10] )
+    L = GA::binary2decimal( vet[ 11:length(vet) ] )
+    
+  }
   
   # Parametros de custo
   
@@ -212,12 +208,12 @@ func.mL = function(vet,
   
   # Calculo Phi
   Phi <- ( y[2] + y[1] + zz10*y[4] + zz11*y[3] ) * p1 +
-    ( (1-zz10)*y[4] + (1-zz11)*y[3] + y[6] + y[5]) * p2
+    ( (1-zz10)*y[4] + (1-zz11)*y[3] + y[6] + y[5] ) * p2
   
   # Corrigindo erro de Nan
   if (anyNA(c(CM, Phi))){
-    CM <- Inf
-    Phi <- -Inf
+    CM <- 99
+    Phi <- 0
   }
   
   # retorno dos valores
@@ -228,18 +224,6 @@ func.mL = function(vet,
   }
   
   return(CM) # somente custo
-}
-
-#### func.m ####
-
-func.m = function(m, 
-                  obj_cm = TRUE, # objetivo custo medio
-                  obj_phi = FALSE) # objetivo phi
-{
-  func.mL(m = m, 
-          L = m, 
-          obj_cm = obj_cm, 
-          obj_phi = obj_phi)
 }
 
 #### func.mLr ####
