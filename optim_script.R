@@ -5,7 +5,7 @@
 
 source("source_mono.R")
 
-pacotes <- c("rmoo", "tidyverse", "GA")
+pacotes <- c("rmoo", "tidyverse", "GA", "ggrepel")
 sapply(pacotes, require, character.only=TRUE)
 rm(pacotes)
 
@@ -69,7 +69,8 @@ mat_mL <-
     "Phi" = "V4"
   ) %>%
   mutate(Phi = -Phi) %>%
-  arrange(CM)
+  arrange(CM) %>% 
+  distinct()
 
 mat_m <-
   cbind(apply(res_m@population, 1, binary2decimal),
@@ -79,11 +80,30 @@ mat_m <-
          "CM" = "V2",
          "Phi" = "V3") %>%
   mutate(Phi = -Phi) %>%
-  arrange(CM)
+  arrange(CM) %>% 
+  distinct()
 
 
-mat_res %>%
-  ggplot(., aes(CM, Phi))+
+# 3. Gráfico --------------------------------------------------------------
+
+mat_res <- 
+  mat_mL %>% 
+  mutate(func = "func.mL",
+         res = str_glue("m: {m} L: {L} \nCM: {round(CM,4)} Phi: {round(Phi,6)}")) %>% 
+  select(-c(m,L)) %>% 
+  bind_rows(
+    mat_m %>% 
+      mutate(func = "func.m",
+             res = str_glue("m: {m}\nCM: {round(CM,4)} Phi: {round(Phi,6)}")) %>% 
+      select(-m))
+
+
+ggplot(data = mat_res, aes(x = CM, y = Phi, col = func))+
   geom_point()
+
   
+
+
+
+
 

@@ -206,6 +206,12 @@ func.mL = function(vet,
   zz11 <- z5 * sum( ( (1-pi)^(tL-1) * pi ) / ( 1-(1-pi)^L ) * (tL-1) / (L-1) ) +
     z6 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
   
+  # Quando é uma func_m não existe tL
+  if(func_m){
+    zz10 <- zz10 - z8 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
+    zz11 <- zz11 - z6 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
+  }
+  
   # Calculo Phi
   Phi <- ( y[2] + y[1] + zz10*y[4] + zz11*y[3] ) * p1 +
     ( (1-zz10)*y[4] + (1-zz11)*y[3] + y[6] + y[5] ) * p2
