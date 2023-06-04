@@ -2,12 +2,15 @@
 
 func.mL = function(vet, 
                    obj_cm = TRUE, # objetivo custo medio
-                   obj_phi = FALSE, # objetivo mips
-                   func_m = FALSE) # Utilizar somente função m
+                   obj_cmnc = FALSE, # objetivo custo medio nao conforme un produzida
+                   func_m = FALSE,
+                   alpha = 0.01,
+                   c_nc = 20,
+                   p2 = 0.95) # Utilizar somente função m
 {
   # Erro de entrada
   if (!obj_cm){
-    if (!obj_phi){
+    if (!obj_cmnc){
       stop("Tem de escolher pelo menos um objetivo!")
     }
   }
@@ -16,10 +19,11 @@ func.mL = function(vet,
   
   # Parametros Probabilísticos do Processo
   p1 = 0.999        # Fracao de conformes processo sobre controle
-  p2 = 0.95         # Fracao de Conformes processo fora de controle
+  #p2 = 0.95         # Fracao de Conformes processo fora de controle
   pi = 0.0001       # Probabilidade de ocorrencia de shift
-  alpha = 0.01      # Probabilidade de classificacao nao cfe em item cfe
-  beta = 0.01       # Probabilidade de classificacao cfe em item nao cfe
+  beta = alpha
+  # alpha = Probabilidade de classificacao nao cfe em item cfe
+  # beta = Probabilidade de classificacao cfe em item nao cfe
   
   # Decodificando Parametros de entrada
   
@@ -29,15 +33,15 @@ func.mL = function(vet,
     
   }else{
     
-    m = GA::binary2decimal( vet[1:10] )
-    L = GA::binary2decimal( vet[ 11:length(vet) ] )
+    m = GA::binary2decimal( vet[1:8] )
+    L = GA::binary2decimal( vet[ 9:length(vet) ] )
     
   }
   
   # Parametros de custo
   
   c_i = 0.25        # Custo de inspecao
-  c_nc = 20         # Custo envio de nao conformidade
+  #c_nc = 20         # Custo envio de nao conformidade
   c_a = 100         # Custo de ajuste
   c_s = 2           # Custo de descarte de peca inspecionada
   
@@ -173,6 +177,14 @@ func.mL = function(vet,
   custo[5]=z9*(c_nc*(m-1)*(1-p2)+c_i+c_s)+z10*(c_nc*(L-1)*(1-p2)+c_i+c_s) #s2k1
   custo[6]=z11*(c_nc*(m-1)*(1-p2)+c_i+c_s+c_a)+z12*(c_nc*(L-1)*(1-p2)+c_i+c_s+c_a) #s2k0
   
+  custo_naoC <- c((z1*c_nc*(m-1)*(1-p1) + z2*c_nc*(L-1)*(1-p1)), #s0w1
+    (z3*c_nc*(m-1)*(1-p1) + z4*c_nc*(L-1)*(1-p1)), #s0w0
+    (z5*s1*c_nc + z6*s2*c_nc), #s1w1
+    (z7*s1*c_nc + z8*s2*c_nc), #s1w0
+    (z9*c_nc*(m-1)*(1-p2) + z10*c_nc*(L-1)*(1-p2)), #s2w1
+    (z11*c_nc*(m-1)*(1-p2) + z12*c_nc*(L-1)*(1-p2))) #s2w2
+    
+  
   #Fim do Cálculo dos Custos
   
   #Cálculo do Comprimento
@@ -196,58 +208,47 @@ func.mL = function(vet,
   #Cálculo do custo Médio por Unidade Produzida e Enviada ao "Mercado"  
   CM=CP/TM
   
-  # CALCULO DO Phi
-  tm <- 1:m
-  tL <- 1:L
+  # Custo médio de peças não conformes enviadas ao mercado por unidade produzida
+  ## Custo total de não conformes enviados ao mercado
+  CP_NC <- sum(custo_naoC * y)
   
-  zz10 <- z7 * sum( ( (1-pi)^(tm-1) * pi ) / ( 1-(1-pi)^m ) * (tm-1) / (m-1) ) +
-    z8 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
-  
-  zz11 <- z5 * sum( ( (1-pi)^(tL-1) * pi ) / ( 1-(1-pi)^L ) * (tL-1) / (L-1) ) +
-    z6 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
-  
-  # Quando é uma func_m não existe tL
-  if(func_m){
-    zz10 <- zz10 - z8 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
-    zz11 <- zz11 - z6 * sum( ( (1-pi)^(tL-1)*pi )/( 1-(1-pi)^L ) * (tL-1) / (L-1) )
-  }
-  
-  # Calculo Phi
-  Phi <- ( y[2] + y[1] + zz10*y[4] + zz11*y[3] ) * p1 +
-    ( (1-zz10)*y[4] + (1-zz11)*y[3] + y[6] + y[5] ) * p2
+  ## Custo médio de não conformes enviados ao mercado por unidade produzida
+  CM_NC <- CP_NC/TM
   
   # Corrigindo erro de Nan
-  if (anyNA(c(CM, Phi))){
+  if (anyNA(c(CM, CM_NC)) | CM > .65){
     CM <- 99
-    Phi <- 0
+    CM_NC <- 99
   }
   
   # retorno dos valores
-  if (obj_phi){ #Phi verdadeiro
-    if (obj_cm){return(c(CM, -Phi))} #Phi e custo verdadeiros
+  if (obj_cmnc){ #Phi verdadeiro
+    if (obj_cm){return(c(CM, CM_NC))} #Phi e custo verdadeiros
     
-    return(-Phi) # somente Phi
+    return(CM_NC) # somente Phi
   }
   
   return(CM) # somente custo
 }
 
 #### func.mLr ####
-func.mLr = function(m,L,r,a)	#modelo 2.7
+func.mLr = function(vet,
+                    obj_cm = TRUE, # objetivo custo medio
+                    obj_cmnc = FALSE) # objetivo custo medio nao conforme un produzida
 {
-  #Modelo mL com medidas repetidas, COM loop p/ a Entrada dos Parametros
+  #Modelo mL com medidas repetidas, COM loop p/ a Entrada dos Parametros modelo 2.7
   
   #Parametros para o teste
-  #m = 41
-  #L = 896
-  #r = 1
-  #a = 1
+  m  <- binary2decimal(vet[1:8])
+  L  <- binary2decimal(vet[9:18])
+  r  <- binary2decimal(vet[19:23])
+  a  <- binary2decimal(vet[24:length(vet)])
   
   
   #Parametros probabilisticos do processo
   
-  p1 = 0.99             #Fracao de conformes processo sob controle
-  p2 = 0.8              #Fracao de conformes processo fora de controle
+  p1 = 0.999             #Fracao de conformes processo sob controle
+  p2 = 0.95              #Fracao de conformes processo fora de controle
   pi = 0.0001           #Probabilidade de ocorrencia de "shift" no processo
   alpha0 = 0.01         #Probabilidade de classificacao nao cfe em item cfe
   beta0 = 0.01          #Probabilidade de classificacao cfe em item nao cfe
@@ -405,30 +406,57 @@ func.mLr = function(m,L,r,a)	#modelo 2.7
   custo[5]=z9*(c_nc*(m-1)*(1-p2)+r*c_i+c_s)+z10*(c_nc*(L-1)*(1-p2)+r*c_i+c_s) #s2k1
   custo[6]=z11*(c_nc*(m-1)*(1-p2)+r*c_i+c_s+c_a)+z12*(c_nc*(L-1)*(1-p2)+r*c_i+c_s+c_a) #s2k0
   
+  custo_naoC <- c((z1*c_nc*(m-1)*(1-p1) + z2*c_nc*(L-1)*(1-p1)), #s0w1
+                  (z3*c_nc*(m-1)*(1-p1) + z4*c_nc*(L-1)*(1-p1)), #s0w0
+                  (z5*s1*c_nc + z6*s2*c_nc), #s1w1
+                  (z7*s1*c_nc + z8*s2*c_nc), #s1w0
+                  (z9*c_nc*(m-1)*(1-p2) + z10*c_nc*(L-1)*(1-p2)), #s2w1
+                  (z11*c_nc*(m-1)*(1-p2) + z12*c_nc*(L-1)*(1-p2))) #s2w2
+  
   #Fim do Cálculo dos Custos
   
   #Cálculo do Comprimento
-  T = rep(NA, 6)
+  T_v = rep(NA, 6)
   
-  T[1] = z1*(m-1)+z2*(L-1)
-  T[2] = z3*(m-1)+z4*(L-1)
-  T[3] = z5*(m-1)+z6*(L-1)
-  T[4] = z7*(m-1)+z8*(L-1)
-  T[5] = z9*(m-1)+z10*(L-1)
-  T[6] = z11*(m-1)+z12*(L-1)
+  T_v[1] = z1*(m-1)+z2*(L-1)
+  T_v[2] = z3*(m-1)+z4*(L-1)
+  T_v[3] = z5*(m-1)+z6*(L-1)
+  T_v[4] = z7*(m-1)+z8*(L-1)
+  T_v[5] = z9*(m-1)+z10*(L-1)
+  T_v[6] = z11*(m-1)+z12*(L-1)
   
   #Fim do cálculo do Comprimento
   
   #Cálculo do Custo Médio Total
-  CP=y[1]*custo[1]+y[2]*custo[2]+y[3]*custo[3]+y[4]*custo[4]+y[5]*custo[5]+y[6]*custo[6]
+  CP <- sum(y * custo)
   
   #Cálculo do Comprimento Médio Total
-  TM=y[1]*T[1]+y[2]*T[2]+y[3]*T[3]+y[4]*T[4]+y[5]*T[5]+y[6]*T[6]
+  TM <- sum(y * T_v)
   
   #Cálculo do custo Médio por Unidade Produzida e Enviada ao "Mercado"  
-  CM=CP/TM
+  CM <- CP/TM
   
-  return(CM)
+  # Custo médio de peças não conformes enviadas ao mercado por unidade produzida
+  ## Custo total de não conformes enviados ao mercado
+  CP_NC <- sum(custo_naoC * y)
+  
+  ## Custo médio de não conformes enviados ao mercado por unidade produzida
+  CM_NC <- CP_NC/TM
+  
+  # Corrigindo erro de Nan
+  if (anyNA(c(CM, CM_NC)) | CM > .65){
+    CM <- 999
+    CM_NC <- 999
+  }
+  
+  # retorno dos valores
+  if (obj_cmnc){ #Phi verdadeiro
+    if (obj_cm){return(c(CM, CM_NC))} #Phi e custo verdadeiros
+    
+    return(CM_NC) # somente Phi
+  }
+  
+  return(CM) # somente custo
 }
 
 #### func.fin ####
