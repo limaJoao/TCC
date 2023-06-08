@@ -1,12 +1,24 @@
 #### func.mL ####
 
-func.mL = function(vet, 
+func.mL = function(vet, # Vetor de entrada Binário
                    obj_cm = TRUE, # objetivo custo medio
                    obj_cmnc = FALSE, # objetivo custo medio nao conforme un produzida
-                   func_m = FALSE,
+                   func_m = FALSE, # Utilizar função m (m = L)
+                   
+                   # Parametros probabilisticos
+                   p1 = 0.999,
+                   p2 = 0.95,
+                   pi = 0.0001,
                    alpha = 0.01,
+                   
+                   # Parametros de Custo
+                   c_i = 0.25,
                    c_nc = 20,
-                   p2 = 0.95) # Utilizar somente função m
+                   c_a = 100,
+                   c_s = 2,
+                   
+                   penalidade_CM = 5
+                   ) 
 {
   # Erro de entrada
   if (!obj_cm){
@@ -15,15 +27,22 @@ func.mL = function(vet,
     }
   }
   
-  # Entrada dos Parametros
+  # Definicao dos Parametros
   
-  # Parametros Probabilísticos do Processo
-  p1 = 0.999        # Fracao de conformes processo sobre controle
-  #p2 = 0.95         # Fracao de Conformes processo fora de controle
-  pi = 0.0001       # Probabilidade de ocorrencia de shift
-  beta = alpha
-  # alpha = Probabilidade de classificacao nao cfe em item cfe
+  ## Parametros Probabilísticos do Processo
+  #p1 = Fracao de conformes processo sobre controle
+  #p2 = Fracao de Conformes processo fora de controle
+  #pi = Probabilidade de ocorrencia de shift
+  #alpha = Probabilidade de classificacao nao cfe em item cfe
   # beta = Probabilidade de classificacao cfe em item nao cfe
+  
+  ## Parametros de custo
+  #c_i = Custo de inspecao
+  #c_nc = Custo envio de nao conformidade
+  #c_a = Custo de ajuste
+  #c_s = Custo de descarte de peca inspecionada
+  
+  beta = alpha
   
   # Decodificando Parametros de entrada
   
@@ -37,13 +56,6 @@ func.mL = function(vet,
     L = GA::binary2decimal( vet[ 9:length(vet) ] )
     
   }
-  
-  # Parametros de custo
-  
-  c_i = 0.25        # Custo de inspecao
-  #c_nc = 20         # Custo envio de nao conformidade
-  c_a = 100         # Custo de ajuste
-  c_s = 2           # Custo de descarte de peca inspecionada
   
   # Contrucao da Matriz de Transicao e Calculo do Vetor Estacionario
   
@@ -216,7 +228,7 @@ func.mL = function(vet,
   CM_NC <- CP_NC/TM
   
   # Corrigindo erro de Nan
-  if (anyNA(c(CM, CM_NC)) | CM > .65){
+  if (anyNA(c(CM, CM_NC)) | CM > penalidade_CM){
     CM <- 99
     CM_NC <- 99
   }
@@ -232,38 +244,52 @@ func.mL = function(vet,
 }
 
 #### func.mLr ####
-func.mLr = function(vet,
+func.mLr = function(vet, # Vetor de entrada Binário
                     obj_cm = TRUE, # objetivo custo medio
-                    obj_cmnc = FALSE) # objetivo custo medio nao conforme un produzida
+                    obj_cmnc = FALSE, # objetivo custo medio nao conforme un produzida
+                    
+                    # Parametros probabilisticos
+                    p1 = 0.999,
+                    p2 = 0.95,
+                    pi = 0.0001,
+                    alpha = 0.01,
+                    
+                    # Parametros de Custo
+                    c_i = 0.25,
+                    c_nc = 20,
+                    c_a = 100,
+                    c_s = 2,
+                    penalidade_CM = 5) # objetivo custo medio nao conforme un produzida
 {
   #Modelo mL com medidas repetidas, COM loop p/ a Entrada dos Parametros modelo 2.7
   
-  #Parametros para o teste
+  # Definicao dos Parametros
+  
+  ## Parametros Probabilísticos do Processo
+  #p1 = Fracao de conformes processo sobre controle
+  #p2 = Fracao de Conformes processo fora de controle
+  #pi = Probabilidade de ocorrencia de shift
+  #alpha = Probabilidade de classificacao nao cfe em item cfe
+  #beta = Probabilidade de classificacao cfe em item nao cfe
+  
+  ## Parametros de custo
+  #c_i = Custo de inspecao
+  #c_nc = Custo envio de nao conformidade
+  #c_a = Custo de ajuste
+  #c_s = Custo de descarte de peca inspecionada
+  
+  #Fim da entrada dos Parametros
+  
+  # Decodificação
   m  <- binary2decimal(vet[1:8])
   L  <- binary2decimal(vet[9:18])
   r  <- binary2decimal(vet[19:23])
   a  <- binary2decimal(vet[24:length(vet)])
   
+  beta <- alpha
   
-  #Parametros probabilisticos do processo
-  
-  p1 = 0.999             #Fracao de conformes processo sob controle
-  p2 = 0.95              #Fracao de conformes processo fora de controle
-  pi = 0.0001           #Probabilidade de ocorrencia de "shift" no processo
-  alpha0 = 0.01         #Probabilidade de classificacao nao cfe em item cfe
-  beta0 = 0.01          #Probabilidade de classificacao cfe em item nao cfe
-  
-  #Parametros de custo 
-  
-  c_i = 0.25            #Custo de inspecao
-  c_nc = 20             #Custo de envio
-  c_a = 100             #Custo de ajuste
-  c_s = 2               #Custo de descarte de peça inspecionada
-  
-  #Fim da entrada dos Parametros
-  
-  alpha = pbinom(a-1,r,1-alpha0)
-  beta = 1 - pbinom(a-1,r,beta0)
+  alpha = pbinom(a-1,r,1-alpha)
+  beta = 1 - pbinom(a-1,r,beta)
   
   #Construcao da Matriz de Transicao e Calculo do vetor estacionário
   
@@ -444,7 +470,7 @@ func.mLr = function(vet,
   CM_NC <- CP_NC/TM
   
   # Corrigindo erro de Nan
-  if (anyNA(c(CM, CM_NC)) | CM > .65){
+  if (anyNA(c(CM, CM_NC)) | CM > penalidade_CM){
     CM <- 999
     CM_NC <- 999
   }
