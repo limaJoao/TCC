@@ -9,7 +9,7 @@ calcula_cenario <-
                 flatten(list(
                   list(vet = x,
                        obj_cm = TRUE,
-                       obj_cmnc = TRUE),
+                       obj_propnc = TRUE),
                   args
                 )))
       },
@@ -27,7 +27,7 @@ calcula_cenario <-
                 flatten(list(
                   list(vet = x,
                        obj_cm = TRUE,
-                       obj_cmnc = TRUE,
+                       obj_propnc = TRUE,
                        func_m = TRUE),
                   args
                 )))
@@ -48,7 +48,7 @@ calcula_cenario <-
                   list(
                     vet = x,
                     obj_cm = TRUE,
-                    obj_cmnc = TRUE),
+                    obj_propnc = TRUE),
                   args
                 )))
       },
@@ -76,7 +76,7 @@ calcula_cenario <-
         "m" = "V1",
         "L" = "V2",
         "CM" = "V3",
-        "CM_NC" = "V4"
+        "Prop_NC" = "V4"
       ) %>%
       arrange(CM) %>% 
       distinct()
@@ -87,7 +87,7 @@ calcula_cenario <-
       as.data.frame() %>%
       rename("m" = "V1",
              "CM" = "V2",
-             "CM_NC" = "V3") %>%
+             "Prop_NC" = "V3") %>%
       arrange(CM) %>% 
       distinct()
     
@@ -108,7 +108,7 @@ calcula_cenario <-
         "r" = "V3",
         "a" = "V4",
         "CM" = "V5",
-        "CM_NC" = "V6"
+        "Prop_NC" = "V6"
       ) %>%
       arrange(CM) %>% 
       distinct()
@@ -119,17 +119,17 @@ calcula_cenario <-
     mat_res <- 
       mat_mL %>% 
       mutate(func = "func.mL",
-             res = str_glue("m: {m} L: {L} \nCM: {round(CM,4)} CM_NC: {round(CM_NC,6)}")) %>% 
+             res = str_glue("m: {m} L: {L} \nCM: {round(CM,4)} Prop_NC: {round(Prop_NC,6)}")) %>% 
       select(-c(m,L)) %>% 
       bind_rows(
         mat_mLr %>% 
           mutate(func = "func.mLr",
-                 res = str_glue("m: {m} L: {L} r:{r} a:{a}\nCM: {round(CM,4)} CM_NC: {round(CM_NC,6)}")) %>% 
+                 res = str_glue("m: {m} L: {L} r:{r} a:{a}\nCM: {round(CM,4)} Prop_NC: {round(Prop_NC,6)}")) %>% 
           select(-c(m,L,r,a))) %>% 
       bind_rows(
         mat_m %>% 
           mutate(func = "func.m",
-                 res = str_glue("m: {m} \nCM: {round(CM,4)} CM_NC: {round(CM_NC,6)}")) %>% 
+                 res = str_glue("m: {m} \nCM: {round(CM,4)} Prop_NC: {round(Prop_NC,6)}")) %>% 
           select(-m)
       )
     
@@ -137,7 +137,7 @@ calcula_cenario <-
     
     g <- 
       ggplot(data = mat_res, 
-             aes(x = CM, y = CM_NC, fill = func, shape = func))+
+             aes(x = CM, y = Prop_NC, fill = func, shape = func))+
       geom_point(size = 2.5, stroke = 1) +
       scale_fill_manual(values = cbPalette)+
       scale_shape_manual(values = c(21,24,22)) +
